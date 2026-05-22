@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, 
+body, 
+#app {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100vh;
+  overflow-x: hidden; /* Mencegah scrollbar horizontal gaib di HP */
+}
+
+.title_sidebar {
+  color: black;
+}
