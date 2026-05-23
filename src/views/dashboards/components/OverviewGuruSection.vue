@@ -11,8 +11,9 @@
         </h3>
         <span
           class="text-[11px] font-bold text-[#4A5D4E] bg-[#EAF0EC] px-2 py-0.5 rounded"
-          >Mei 2026</span
         >
+          Mei 2026
+        </span>
       </div>
 
       <div class="grid grid-cols-7 gap-2 text-center text-xs font-medium">
@@ -23,12 +24,17 @@
         >
           {{ h }}
         </div>
-        <div v-for="blank in 4" :key="'b-' + blank" class="py-2 text-slate-200">
+
+        <div
+          v-for="blank in totalKotakKosong"
+          :key="'b-' + blank"
+          class="py-2 text-slate-200/60 select-none"
+        >
           •
         </div>
 
         <div
-          v-for="date in 31"
+          v-for="date in totalHariBulanIni"
           :key="date"
           @click="klikTanggalKalender(date)"
           :class="[
@@ -58,15 +64,15 @@
         <div v-if="detailKelasKalender.length > 0" class="space-y-2">
           <div
             v-for="c in detailKelasKalender"
-            :key="c.id"
+            :key="c.jadwal_id || c.id"
             class="text-xs font-medium flex justify-between border-b border-slate-200/60 pb-1.5 last:border-none last:pb-0"
           >
-            <span class="font-bold text-slate-800"
-              >{{ c.nama_kelas }} — {{ c.nama_mapel }}</span
-            >
-            <span class="text-[#4A5D4E] font-semibold"
-              >🕒 {{ c.jam_mulai.slice(0, 5) }} WIB</span
-            >
+            <span class="font-bold text-slate-800">
+              {{ c.nama_kelas }} — {{ c.nama_mapel }}
+            </span>
+            <span class="text-[#4A5D4E] font-semibold">
+              🕒 {{ c.jam_mulai.slice(0, 5) }} WIB
+            </span>
           </div>
         </div>
         <p v-else class="text-xs text-slate-400 font-medium">
@@ -101,31 +107,48 @@
             </h4>
             <p class="text-xs text-slate-400 font-medium">
               Sesi dimulai pukul:
-              <span class="font-bold text-slate-600"
-                >{{ jadwal.jam_mulai.slice(0, 5) }} WIB</span
-              >
+              <span class="font-bold text-slate-600">
+                {{ jadwal.jam_mulai.slice(0, 5) }} WIB
+              </span>
             </p>
           </div>
 
           <div
-            class="px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-center sm:text-right shadow-sm min-w-[120px]"
+            class="px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-center sm:text-right shadow-sm min-w-[130px]"
           >
-            <p class="text-[9px] font-bold text-slate-400 uppercase">
-              HITUNG MUNDUR
-            </p>
             <p
-              :class="[
-                'text-sm font-black mt-0.5 tracking-wider font-mono',
-                statusAksesJadwal[jadwal.jadwal_id]?.bisaDiakses
-                  ? 'text-emerald-600'
-                  : 'text-amber-600',
-              ]"
+              class="text-[9px] font-bold text-slate-400 uppercase tracking-wider"
             >
-              {{
-                statusAksesJadwal[jadwal.jadwal_id]?.stringCountdown ||
-                "00:00:00"
-              }}
+              Status Sesi
             </p>
+
+            <div class="mt-1">
+              <p
+                v-if="apakahSesiSudahHabis(jadwal.jam_mulai)"
+                class="text-xs font-black text-slate-400 uppercase tracking-wide flex items-center justify-center sm:justify-end gap-1.5 select-none py-0.5"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                Sesi Selesai
+              </p>
+
+              <p
+                v-else-if="statusAksesJadwal[jadwal.jadwal_id]?.bisaDiakses"
+                class="text-xs font-black text-emerald-600 uppercase tracking-wide flex items-center justify-center sm:justify-end gap-1.5 animate-pulse py-0.5"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                Sesi Aktif
+              </p>
+
+              <p
+                v-else
+                class="text-sm font-black tracking-wider font-mono text-amber-600"
+              >
+                {{
+                  statusAksesJadwal[jadwal.jadwal_id]?.stringCountdown ||
+                  "00:00:00"
+                }}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -142,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 const props = defineProps({
   listJadwal: Array,
@@ -150,8 +173,41 @@ const props = defineProps({
   hariSekarangString: String,
 });
 
-const tanggalTerpilihKalender = ref(22);
+// Mengunci kalender pada tahun 2026 dan bulan Mei (Index 4)
+const tahunKalender = ref(2026);
+const bulanKalender = ref(4);
+
+const tanggalTerpilihKalender = ref(new Date().getDate()); // Default otomatis langsung ke tanggal hari ini
 const detailKelasKalender = ref([]);
+
+// 🌟 LOGIKA UTAMA: Hitung jumlah kotak kosong awal bulan Mei 2026 secara akurat
+const totalKotakKosong = computed(() => {
+  return new Date(tahunKalender.value, bulanKalender.value, 1).getDay(); // Mei 2026 otomatis menghasilkan nilai 5 (Jumat)
+});
+
+// Hitung total hari dalam bulan berjalan (Mei = 31 hari)
+const totalHariBulanIni = computed(() => {
+  return new Date(tahunKalender.value, bulanKalender.value + 1, 0).getDate();
+});
+
+// Memetakan teks nama hari JavaScript ke hari bahasa Indonesia database kamu
+const dapatkanNamaHariDariTanggal = (tanggal) => {
+  const listNamaHariUptodate = [
+    "minggu",
+    "senin",
+    "selasa",
+    "rabu",
+    "kamis",
+    "jumat",
+    "sabtu",
+  ];
+  const indexHari = new Date(
+    tahunKalender.value,
+    bulanKalender.value,
+    tanggal,
+  ).getDay();
+  return listNamaHariUptodate[indexHari];
+};
 
 const kelasHariIni = computed(() => {
   return props.listJadwal.filter(
@@ -159,36 +215,45 @@ const kelasHariIni = computed(() => {
   );
 });
 
+// Deteksi apakah pada tanggal tertentu ada jadwal mengajar guru
 const isTanggalAdaKelas = (tanggal) => {
-  const jumatDates = [1, 8, 15, 22, 29];
-  const sabtuDates = [2, 9, 16, 23, 30];
-  const jumatAdaKelas = props.listJadwal.some(
-    (j) => j.hari.toLowerCase() === "jumat",
-  );
-  const sabtuAdaKelas = props.listJadwal.some(
-    (j) => j.hari.toLowerCase() === "sabtu",
-  );
-
-  if (jumatAdaKelas && jumatDates.includes(tanggal)) return true;
-  if (sabtuAdaKelas && sabtuDates.includes(tanggal)) return true;
-  return false;
+  const namaHari = dapatkanNamaHariDariTanggal(tanggal);
+  return props.listJadwal.some((j) => j.hari.toLowerCase() === namaHari);
 };
 
+// Logika interaksi klik baris tanggal kalender
 const klikTanggalKalender = (tanggal) => {
   tanggalTerpilihKalender.value = tanggal;
-  const jumatDates = [1, 8, 15, 22, 29];
-  const sabtuDates = [2, 9, 16, 23, 30];
+  const namaHari = dapatkanNamaHariDariTanggal(tanggal);
 
-  if (jumatDates.includes(tanggal)) {
-    detailKelasKalender.value = props.listJadwal.filter(
-      (j) => j.hari.toLowerCase() === "jumat",
-    );
-  } else if (sabtuDates.includes(tanggal)) {
-    detailKelasKalender.value = props.listJadwal.filter(
-      (j) => j.hari.toLowerCase() === "sabtu",
-    );
-  } else {
-    detailKelasKalender.value = [];
-  }
+  detailKelasKalender.value = props.listJadwal.filter(
+    (j) => j.hari.toLowerCase() === namaHari,
+  );
 };
+
+// ====================================================================================
+// LOGIKA VALIDASI SELESAI SESI MENGAJAR (ASUMSI DURASI: 2 JAM)
+// ====================================================================================
+const apakahSesiSudahHabis = (jamMulaiString) => {
+  if (!jamMulaiString) return false;
+
+  const waktuSekarang = new Date();
+
+  // Pecah string jam "08:00:00" menjadi angka jam dan menit
+  const [jam, menit] = jamMulaiString.split(":").map(Number);
+
+  const waktuBatasSelesai = new Date();
+  waktuBatasSelesai.setHours(jam, menit, 0, 0);
+
+  // 🌟 Tambahkan durasi mengajar, misal ditambahkan 2 jam dari jam mulai
+  waktuBatasSelesai.setHours(waktuBatasSelesai.getHours() + 2);
+
+  // Jika waktu sekarang sudah melewati waktu batas selesai, kembalikan nilai true
+  return waktuSekarang > waktuBatasSelesai;
+};
+
+// Saat komponen pertama kali dibuka, langsung muat detail kelas untuk tanggal hari ini
+onMounted(() => {
+  klikTanggalKalender(tanggalTerpilihKalender.value);
+});
 </script>
