@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'https://api-absenin-sekolah.onrender.com'
+  baseURL: "https://api-absenin-sekolah.onrender.com/api",
 });
 
 // Interceptor untuk menyisipkan JWT Token otomatis jika sudah login (Untuk request absensi nanti)
