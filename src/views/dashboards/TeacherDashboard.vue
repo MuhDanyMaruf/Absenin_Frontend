@@ -31,11 +31,6 @@
         <div
           class="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start"
         >
-          <div
-            class="w-12 h-12 bg-[#1E293B] text-[#FDFBF7] rounded-2xl flex items-center justify-center font-black text-lg shadow-md tracking-wider shrink-0 select-none"
-          >
-            G
-          </div>
           <div class="flex flex-col">
             <h1
               class="text-base font-black text-[#0F172A] uppercase tracking-[0.15em] leading-tight"
@@ -304,9 +299,67 @@ const simpanPresensi = async () => {
   }
 };
 
-const unduhDokumen = (tipeDokumen) => {
-  const urlDownload = `http://localhost:5000/api/guru/export/${tipeDokumen}?kelas_id=${agendaTerpilih.value.kelas_id}&mapel_id=${agendaTerpilih.value.mapel_id}&hari=${agendaTerpilih.value.hari}`;
-  window.open(urlDownload, "_blank");
+const unduhDokumen = async (jenis) => {
+  if (jenis === "excel") {
+    if (!agendaTerpilih.value) {
+      showToast(
+        "error",
+        "Pilih Kelas",
+        "Silakan pilih kelas mengajar terlebih dahulu.",
+      );
+      return;
+    }
+
+    try {
+      showToast(
+        "success",
+        "Memproses File",
+        "Sedang menyiapkan dokumen Excel premium...",
+      );
+
+      const kelasId = agendaTerpilih.value.kelas_id;
+
+      // 🌟 PERBAIKAN UTAMA: Ambil tanggal asli dari data payload presensi yang sedang aktif di layar!
+      // Kita gunakan properti tanggal dari payloadAbsen milikmu agar 100% sinkron dengan database
+      const tanggalFormat =
+        payloadAbsen.value?.tanggal || new Date().toISOString().split("T")[0];
+
+      console.log("Mengunduh excel untuk tanggal:", tanggalFormat); // Untuk debugging di console log frontend
+
+      const response = await api.get("/absensi/ekspor-excel", {
+        params: {
+          kelas_id: Number(kelasId),
+          tanggal: tanggalFormat, // Tanggal ini dijamin pasti sama dengan yang disimpan ke database
+        },
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `Laporan_Presensi_${agendaTerpilih.value.nama_kelas}_${tanggalFormat}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      showToast(
+        "success",
+        "Unduhan Berhasil",
+        "Laporan Excel terstruktur berhasil disimpan.",
+      );
+    } catch (error) {
+      console.error("Eror pembuatan dokumen:", error);
+      showToast(
+        "error",
+        "Unduhan Gagal",
+        "Gagal memuat dokumen. Pastikan data presensi sudah tersimpan.",
+      );
+    }
+  }
 };
 
 const loadGuruSession = () => {
