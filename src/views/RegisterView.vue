@@ -6,12 +6,14 @@
       class="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-neutral-200/60 shadow-sm space-y-6"
     >
       <div class="text-center space-y-2">
-        <div
-          class="w-12 h-12 rounded-xl bg-neutral-900 text-white flex items-center justify-center font-bold text-xl mx-auto shadow-sm"
-        >
-          A
+        <div class="mx-auto flex items-center justify-center">
+          <img
+            src="../assets/absenin.png"
+            alt="Logo Absensi Sekolah"
+            class="w-72 h-15 object-contain"
+          />
         </div>
-        <h1 class="text-xl font-bold text-neutral-900 tracking-tight">
+        <h1 class="text-xl font-bold text-neutral-800 tracking-tight">
           Pendaftaran Akun Siswa
         </h1>
         <p class="text-xs text-neutral-400">
@@ -20,7 +22,7 @@
       </div>
 
       <div
-        class="p-3 bg-amber-50/60 border border-amber-200/60 rounded-xl flex gap-3 items-start"
+        class="p-3 bg-amber-50/60 border border-amber-200/40 rounded-xl flex gap-3 items-start"
       >
         <span class="text-amber-600 text-sm mt-0.5">⚠️</span>
         <p class="text-[11px] text-amber-700 leading-relaxed">
@@ -33,13 +35,13 @@
       <form @submit.prevent="handleRegister" class="space-y-4">
         <div class="flex flex-col gap-1.5">
           <label for="username" class="text-xs font-semibold text-neutral-600"
-            >Username (NIS)</label
+            >Nama</label
           >
           <InputText
             id="username"
             v-model="registerForm.username"
-            placeholder="Contoh: 12345678"
-            class="w-full h-11 px-3 border border-neutral-200 rounded-xl text-sm focus:border-neutral-950"
+            placeholder="Contoh: Budi"
+            class="custom-register-input w-full h-11 px-3 border border-neutral-200 rounded-xl text-sm outline-none transition-all duration-300"
             required
           />
         </div>
@@ -53,7 +55,7 @@
             type="email"
             v-model="registerForm.email"
             placeholder="siswa_baru@gmail.com"
-            class="w-full h-11 px-3 border border-neutral-200 rounded-xl text-sm focus:border-neutral-950"
+            class="custom-register-input w-full h-11 px-3 border border-neutral-200 rounded-xl text-sm outline-none transition-all duration-300"
             required
           />
         </div>
@@ -68,7 +70,7 @@
               v-model="registerForm.kelas"
               :options="listKelas"
               placeholder="Pilih Kelas"
-              class="w-full h-11 border border-neutral-200 rounded-xl text-sm flex items-center focus:border-neutral-950"
+              class="custom-register-select w-full h-11 border border-neutral-200 rounded-xl text-sm flex items-center outline-none transition-all duration-300"
               required
             />
           </div>
@@ -82,7 +84,7 @@
               v-model="registerForm.jurusan"
               :options="listJurusan"
               placeholder="Pilih Jurusan"
-              class="w-full h-11 border border-neutral-200 rounded-xl text-sm flex items-center focus:border-neutral-950"
+              class="custom-register-select w-full h-11 border border-neutral-200 rounded-xl text-sm flex items-center outline-none transition-all duration-300"
               required
             />
           </div>
@@ -98,8 +100,8 @@
             placeholder="passwordsiswa123"
             :feedback="false"
             toggleMask
-            class="w-full"
-            inputClass="w-full h-11 px-3 border border-neutral-200 rounded-xl text-sm focus:border-neutral-950"
+            class="w-full custom-password-wrapper"
+            inputClass="custom-register-input w-full h-11 px-3 border border-neutral-200 rounded-xl text-sm outline-none transition-all duration-300"
             required
           />
         </div>
@@ -108,7 +110,7 @@
           type="submit"
           label="Daftar Akun Siswa"
           :loading="loading"
-          class="w-full h-12 bg-neutral-900 hover:bg-neutral-800 text-white font-medium text-sm rounded-xl transition cursor-pointer shadow-sm mt-2 border-none"
+          class="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-xl transition-all duration-300 transform active:scale-[0.99] cursor-pointer shadow-sm mt-2 border-none"
         />
       </form>
 
@@ -118,7 +120,7 @@
           <a
             href="#"
             @click.prevent="goToLogin"
-            class="font-semibold text-neutral-900 hover:underline"
+            class="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline ms-1 transition-colors duration-200"
             >Masuk di sini</a
           >
         </p>
@@ -182,3 +184,62 @@ const goToLogin = () => {
   router.push("/login");
 };
 </script>
+
+<style scoped>
+/* ── OVERRIDE STYLING & GLOW INTERACTIVE EFFECT ── */
+
+/* 1. Reset & Paksa input (PrimeVue InputText & Select) menjadi warna soft putih/abu-abu */
+:deep(.custom-register-input),
+:deep(.custom-register-select),
+:deep(.p-inputtext),
+:deep(.p-select) {
+  background-color: #f9fafb !important; /* Soft grey background (neutral-50) */
+  color: #1f2937 !important; /* Text color */
+  border: 1px solid #e5e7eb !important; /* Soft border border-neutral-200 */
+}
+
+/* Penyesuaian khusus teks placeholder di dalam Dropdown Select */
+:deep(.p-select-label.p-placeholder),
+:deep(.custom-register-input::placeholder) {
+  color: #9ca3af !important; /* Warna teks placeholder abu-abu netral */
+}
+
+/* Penyesuaian padding text & icon panah di dalam PrimeVue Select */
+:deep(.p-select-label) {
+  padding-left: 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: #1f2937 !important;
+}
+:deep(.p-select-dropdown) {
+  color: #9ca3af !important;
+  padding-right: 0.5rem !important;
+}
+
+/* 2. Efek Interaktif (Glow Emerald) saat kolom diklik atau aktif */
+:deep(.custom-register-input:focus),
+:deep(.custom-register-select:focus-within),
+:deep(.p-inputtext:focus),
+:deep(.p-select:not(.p-disabled).p-focus) {
+  background-color: #ffffff !important;
+  border-color: #10b981 !important; /* Border berubah jadi Hijau Emerald */
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important; /* Ring pendaran cahaya */
+}
+
+/* 3. Perbaikan Posisi Ikon Mata pada Input Password PrimeVue */
+:deep(.custom-password-wrapper) {
+  display: inline-flex;
+  position: relative;
+}
+:deep(.custom-password-wrapper .p-icon-field) {
+  width: 100%;
+}
+:deep(.custom-password-wrapper svg),
+:deep(.custom-password-wrapper i) {
+  color: #9ca3af !important;
+  position: absolute;
+  right: 0.75rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  cursor: pointer;
+}
+</style>

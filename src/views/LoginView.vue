@@ -49,9 +49,9 @@
           >
             {{
               selectedRole === "siswa"
-                ? "NIS atau Email Siswa"
+                ? "Nama atau NIS Siswa"
                 : selectedRole === "guru"
-                  ? "NIP atau Email Guru"
+                  ? "Nama atau Email Guru"
                   : "Username Admin"
             }}
           </label>
@@ -138,8 +138,8 @@ const loginForm = reactive({
 });
 
 const getPlaceholder = computed(() => {
-  if (selectedRole.value === "siswa") return "Masukkan NIS atau email kamu";
-  if (selectedRole.value === "guru") return "Masukkan NIP atau email guru";
+  if (selectedRole.value === "siswa") return "Masukkan Nama atau NIS kamu";
+  if (selectedRole.value === "guru") return "Masukkan Nama atau email guru";
   return "Masukkan username admin";
 });
 
