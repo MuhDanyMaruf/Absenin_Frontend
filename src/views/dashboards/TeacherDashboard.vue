@@ -23,57 +23,70 @@
     </Transition>
 
     <header
-      class="bg-white border-b border-slate-100 sticky top-0 z-10 px-6 md:px-10 py-4 flex flex-col sm:flex-row gap-4 justify-between items-center shadow-sm"
+      class="bg-[#FDFBF7] border-b border-slate-200/60 sticky top-0 z-50 px-4 md:px-12 py-5 backdrop-blur-md bg-[#FDFBF7]/95"
     >
-      <div class="flex items-center gap-4 w-full sm:w-auto">
+      <div
+        class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4"
+      >
         <div
-          class="w-11 h-11 bg-[#4A5D4E] text-white rounded-xl flex items-center justify-center font-bold text-base shadow-sm"
+          class="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start"
         >
-          G
+          <div
+            class="w-12 h-12 bg-[#1E293B] text-[#FDFBF7] rounded-2xl flex items-center justify-center font-black text-lg shadow-md tracking-wider shrink-0 select-none"
+          >
+            G
+          </div>
+          <div class="flex flex-col">
+            <h1
+              class="text-base font-black text-[#0F172A] uppercase tracking-[0.15em] leading-tight"
+            >
+              Portal Presensi Guru
+            </h1>
+            <p
+              class="text-[10px] font-black text-[#64748B] uppercase tracking-widest mt-1"
+            >
+              Hari Ini: {{ tanggalHariIni }}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-sm font-bold text-slate-800 tracking-wide uppercase">
-            Portal Presensi Guru
-          </h1>
-          <p class="text-xs text-slate-400 font-semibold mt-0.5">
-            {{ tanggalHariIni }}
-          </p>
+
+        <div class="w-full md:w-auto flex justify-center">
+          <nav
+            class="bg-slate-200/50 p-1 rounded-2xl flex gap-1 w-full max-w-md md:w-auto shadow-inner"
+          >
+            <button
+              v-for="tab in ['overview', 'absensi', 'nilai']"
+              :key="tab"
+              @click="activeTab = tab"
+              :class="[
+                'px-5 py-2.5 text-[11px] font-black rounded-xl uppercase tracking-[0.1em] transition-all duration-300 cursor-pointer flex-1 md:flex-none text-center whitespace-nowrap flex items-center justify-center gap-2 select-none',
+                activeTab === tab
+                  ? 'bg-[#1E293B] text-white shadow-md transform scale-[1.02]'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/40',
+              ]"
+            >
+              <span v-if="tab === 'overview'">👁️ Overview</span>
+              <span v-else-if="tab === 'absensi'">📝 Absensi</span>
+              <span v-else>📊 Nilai</span>
+            </button>
+          </nav>
         </div>
-      </div>
 
-      <nav class="bg-slate-100/80 p-1 rounded-xl flex gap-1 w-full sm:w-auto">
-        <button
-          v-for="tab in ['overview', 'absensi', 'nilai']"
-          :key="tab"
-          @click="activeTab = tab"
-          :class="[
-            'px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider transition-all duration-200 cursor-pointer flex-1 sm:flex-none text-center',
-            activeTab === tab
-              ? 'bg-[#4A5D4E] text-white shadow-sm'
-              : 'text-slate-400 hover:text-slate-600',
-          ]"
+        <div
+          class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end border-t md:border-none border-slate-200/60 pt-4 md:pt-0"
         >
-          {{
-            tab === "overview"
-              ? "👁️ Overview"
-              : tab === "absensi"
-                ? "📝 Presensi"
-                : "📊 Tugas & Nilai"
-          }}
-        </button>
-      </nav>
-
-      <div class="flex items-center gap-4 hidden md:flex">
-        <span
-          class="text-xs font-bold text-[#4A5D4E] bg-[#EAF0EC] px-4 py-2 rounded-xl"
-          >👤 {{ guruInfo.username }}</span
-        >
-        <button
-          @click="handleLogout"
-          class="text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-100 px-4 py-2 rounded-xl bg-white transition cursor-pointer"
-        >
-          Keluar
-        </button>
+          <span
+            class="text-[11px] font-black text-[#1E293B] bg-slate-200/60 px-4 py-2.5 rounded-xl uppercase tracking-wider whitespace-nowrap flex items-center gap-2"
+          >
+            👤 {{ guruInfo.username }}
+          </span>
+          <button
+            @click="handleLogout"
+            class="text-[11px] font-black text-rose-600 bg-rose-50/50 hover:bg-rose-100/70 border border-rose-200/60 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer whitespace-nowrap uppercase tracking-wider shadow-sm"
+          >
+            Keluar
+          </button>
+        </div>
       </div>
     </header>
 

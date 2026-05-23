@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const URL_API_LIVE = "https://api-absenin-sekolah.onrender.com/api";
+const URL_API_LOKAL = "http://localhost:5000/api";
+
 const api = axios.create({
-  baseURL: "https://api-absenin-sekolah.onrender.com/api",
+  baseURL:
+    window.location.hostname === "localhost" ? URL_API_LOKAL : URL_API_LIVE,
+  withCredentials: true, // Tambahkan ini agar sinkronisasi session/cookie aman
 });
 
 // Interceptor untuk menyisipkan JWT Token otomatis jika sudah login (Untuk request absensi nanti)

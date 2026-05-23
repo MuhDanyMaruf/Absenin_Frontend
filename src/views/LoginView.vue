@@ -6,13 +6,19 @@
       class="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-neutral-200/60 shadow-sm space-y-6"
     >
       <div class="text-center space-y-2">
-        <div
-          class="w-12 h-12 rounded-xl bg-neutral-900 text-white flex items-center justify-center font-bold text-xl mx-auto shadow-sm"
-        >
-          A
+        <div class="mx-auto flex items-center justify-center">
+          <img
+            src="../assets/absenin.png"
+            alt="Logo Absensi Sekolah"
+            class="w-72 h-15 object-contain"
+          />
         </div>
-        <h1 class="text-xl font-bold text-neutral-900 tracking-tight">
-          Selamat Datang Kembali
+
+        <h1
+          class="text-xl text-[#4A4A4A] font-bold text-neutral-900 tracking-tight"
+        >
+          Selamat Datang
+
         </h1>
         <p class="text-xs text-neutral-400">
           Silakan masuk ke akun Absensi Sekolah kamu
