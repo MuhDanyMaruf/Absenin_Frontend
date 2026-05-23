@@ -75,7 +75,7 @@
               class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs font-bold uppercase"
             >
               <th class="py-3 px-4">Nama Siswa</th>
-              <th class="py-3 px-4 text-center w-56">Status Kehadiran</th>
+              <th class="py-3 px-4 text-center w-64">Status Kehadiran</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-sm">
@@ -98,7 +98,13 @@
               <td class="py-3 px-4">
                 <div class="flex gap-1">
                   <label
-                    v-for="status in ['Hadir', 'Sakit', 'Izin', 'Alfa']"
+                    v-for="status in [
+                      'Hadir',
+                      'Sakit',
+                      'Izin',
+                      'Alfa',
+                      'Bolos',
+                    ]"
                     :key="status"
                     class="flex-1"
                     :class="
@@ -233,6 +239,29 @@
           </div>
         </div>
 
+        <div
+          class="border border-purple-100 rounded-xl overflow-hidden bg-purple-50/5"
+        >
+          <div
+            class="p-3 bg-purple-50/40 flex justify-between font-black text-purple-700"
+          >
+            <span>🟣 Bolos</span>
+            <span>{{ hitungStatus.Bolos || 0 }} Anak</span>
+          </div>
+          <div
+            v-if="filterSiswaBerdasarStatus('Bolos').length > 0"
+            class="p-3 bg-white border-t border-purple-100/60 flex flex-wrap gap-1.5"
+          >
+            <span
+              v-for="s in filterSiswaBerdasarStatus('Bolos')"
+              :key="s.id"
+              class="bg-purple-50 text-purple-700 text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-tight"
+            >
+              {{ s.nama_lengkap.split(" ")[0] }}
+            </span>
+          </div>
+        </div>
+
         <div class="pt-3 border-t border-slate-100 space-y-2">
           <button
             @click="$emit('unduh-dokumen', 'excel')"
@@ -257,7 +286,7 @@ const props = defineProps({
   listJadwal: Array,
   agendaTerpilih: Object,
   listSiswa: Array,
-  payloadAbsen: Object, // Format objek: { [siswaId]: 'Hadir' | 'Sakit' | 'Izin' | 'Alfa' }
+  payloadAbsen: Object,
   statusAksesJadwal: Object,
   hitungStatus: Object,
   btnLoading: Boolean,
@@ -265,7 +294,6 @@ const props = defineProps({
 
 defineEmits(["pilih-kelas", "simpan-absen", "unduh-dokumen"]);
 
-// 🌟 LOGIKA PROTEKSI WAKTU: Kunci otomatis jika sudah berjalan melebihi 2 Jam
 const isSesiHabis = computed(() => {
   const jamMulai = props.agendaTerpilih?.jam_mulai;
   if (!jamMulai) return false;
@@ -275,12 +303,11 @@ const isSesiHabis = computed(() => {
 
   const waktuBatasSelesai = new Date();
   waktuBatasSelesai.setHours(jam, menit, 0, 0);
-  waktuBatasSelesai.setHours(waktuBatasSelesai.getHours() + 2); // Durasi mengajar 2 Jam
+  waktuBatasSelesai.setHours(waktuBatasSelesai.getHours() + 2);
 
   return waktuSekarang > waktuBatasSelesai;
 });
 
-// Helper untuk menyaring daftar nama siswa live berdasarkan status saat ini
 const filterSiswaBerdasarStatus = (statusTarget) => {
   if (!props.listSiswa || !props.payloadAbsen) return [];
   return props.listSiswa.filter(
@@ -288,21 +315,25 @@ const filterSiswaBerdasarStatus = (statusTarget) => {
   );
 };
 
-// Desain warna tombol radio ketika aktif dipilih
+// 🌟 UPDATE: Logika penetapan warna tombol aktif untuk status Bolos (Ungu)
 const dapatkanWarnaTombolAktif = (status) => {
   if (status === "Hadir")
     return "bg-emerald-600 text-white border-emerald-600 shadow-sm";
   if (status === "Alfa")
     return "bg-rose-600 text-white border-rose-600 shadow-sm";
-  return "bg-amber-500 text-white border-amber-500 shadow-sm"; // Sakit & Izin
+  if (status === "Bolos")
+    return "bg-purple-600 text-white border-purple-600 shadow-sm";
+  return "bg-amber-500 text-white border-amber-500 shadow-sm";
 };
 
-// Desain warna background baris siswa saat preview status terkunci
+// 🌟 UPDATE: Logika render background baris terkunci untuk status Bolos (Ungu Pastel)
 const dapatkanWarnaBarisPreview = (siswaId) => {
   const status = props.payloadAbsen[siswaId];
   if (status === "Hadir")
     return "bg-emerald-50/30 border-l-4 border-l-emerald-500";
   if (status === "Alfa") return "bg-rose-50/30 border-l-4 border-l-rose-500";
+  if (status === "Bolos")
+    return "bg-purple-50/30 border-l-4 border-l-purple-500";
   if (status === "Sakit" || status === "Izin")
     return "bg-amber-50/30 border-l-4 border-l-amber-500";
   return "hover:bg-slate-50/40";
