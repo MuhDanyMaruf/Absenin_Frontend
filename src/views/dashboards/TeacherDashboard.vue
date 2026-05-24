@@ -47,14 +47,14 @@
 
         <div class="w-full md:w-auto flex justify-center">
           <nav
-            class="bg-slate-200/50 p-1 rounded-2xl flex gap-1 w-full max-w-md md:w-auto shadow-inner"
+            class="bg-slate-200/50 p-1 rounded-2xl flex gap-1 w-full max-w-lg md:w-auto shadow-inner overflow-x-auto custom-scrollbar"
           >
             <button
-              v-for="tab in ['overview', 'absensi', 'nilai']"
+              v-for="tab in ['overview', 'absensi', 'riwayat', 'nilai']"
               :key="tab"
               @click="activeTab = tab"
               :class="[
-                'px-5 py-2.5 text-[11px] font-black rounded-xl uppercase tracking-[0.1em] transition-all duration-300 cursor-pointer flex-1 md:flex-none text-center whitespace-nowrap flex items-center justify-center gap-2 select-none',
+                'px-4 md:px-5 py-2.5 text-[11px] font-black rounded-xl uppercase tracking-[0.1em] transition-all duration-300 cursor-pointer flex-1 md:flex-none text-center whitespace-nowrap flex items-center justify-center gap-2 select-none',
                 activeTab === tab
                   ? 'bg-[#1E293B] text-white shadow-md transform scale-[1.02]'
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/40',
@@ -62,6 +62,7 @@
             >
               <span v-if="tab === 'overview'">👁️ Overview</span>
               <span v-else-if="tab === 'absensi'">📝 Absensi</span>
+              <span v-else-if="tab === 'riwayat'">📜 Riwayat</span>
               <span v-else>📊 Nilai</span>
             </button>
           </nav>
@@ -107,6 +108,8 @@
         @unduh-dokumen="unduhDokumen"
       />
 
+      <RiwayatSection v-if="activeTab === 'riwayat'" />
+
       <NilaiSection
         v-if="activeTab === 'nilai'"
         @toast-pemicu="
@@ -130,6 +133,7 @@ import api from "../../services/api";
 import OverviewSection from "./components/OverviewGuruSection.vue";
 import PresensiSection from "./components/PresensiSection.vue";
 import NilaiSection from "./components/NilaiSection.vue";
+import RiwayatSection from "./components/RiwayatSection.vue";
 
 const router = useRouter();
 const activeTab = ref("overview");

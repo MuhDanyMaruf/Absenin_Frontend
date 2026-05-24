@@ -105,8 +105,9 @@
             href="#"
             @click.prevent="goToRegister"
             class="font-semibold text-neutral-900 hover:underline ms-1"
-            >Daftar sekarang</a
           >
+            Daftar sekarang
+          </a>
         </p>
       </div>
     </div>
@@ -119,7 +120,9 @@ import InputText from "primevue/inputtext";
 import Password from "primevue/password";
 import Button from "primevue/button";
 import { useRouter } from "vue-router";
-import api from "../services/api"; // <-- IMPORT SERVICE API
+import api from "../services/api";
+// 🌟 1. Import SweetAlert2
+import Swal from "sweetalert2";
 
 const emit = defineEmits(["switch-page", "login-success"]);
 const router = useRouter();
@@ -150,13 +153,22 @@ const getRoleLabel = computed(() => {
 const handleLogin = async () => {
   loading.value = true;
 
-  // Gunakan .trim() untuk membuang spasi tidak sengaja di ujung teks
   const payload = {
     identifier: loginForm.identifier.trim(),
     password: loginForm.password.trim(),
   };
 
-  console.log("Mengirim payload bersih ke Express.js:", payload);
+  // 🌟 2. Jalankan Animasi Loading SweetAlert2
+  Swal.fire({
+    title: "Memproses Login...",
+    text: "Mohon tunggu sebentar, sedang memverifikasi data.",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
 
   try {
     const response = await api.post("/auth/login", payload);
@@ -164,7 +176,6 @@ const handleLogin = async () => {
     if (response.data.success) {
       const { token, user } = response.data;
 
-      // 1. Simpan session murni ke LocalStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("userId", user.id);
@@ -172,23 +183,43 @@ const handleLogin = async () => {
       localStorage.setItem("email", user.email || "");
       localStorage.setItem("role", user.role);
 
-      // 2. 🌟 PERBAIKAN: Gunakan 'emit' murni (TANPA embel-embel 'this.')
       emit("login-success", user);
 
-      // 3. Alihkan rute navigasi dengan aman ke URL baru
-      if (user.role === "admin") {
-        router.push("/dashboard/admin");
-      } else if (user.role === "guru") {
-        router.push("/dashboard/guru");
-      } else {
-        router.push("/dashboard/siswa");
-      }
+      // 🌟 3. Ubah Modal Loading menjadi Modal Sukses Otomatis
+      Swal.fire({
+        icon: "success",
+        title: "Login Berhasil!",
+        text: `Selamat datang kembali, ${user.username || "User"}!`,
+        timer: 1500, // Akan tertutup otomatis dalam 1.5 detik
+        showConfirmButton: false,
+      }).then(() => {
+        // Alihkan halaman SETELAH animasi sukses selesai
+        if (user.role === "admin") {
+          router.push("/dashboard/admin");
+        } else if (user.role === "guru") {
+          router.push("/dashboard/guru");
+        } else {
+          router.push("/dashboard/siswa");
+        }
+      });
     }
   } catch (error) {
-    // Kode catch lamamu
     const errorMsg =
-      error.response?.data?.message || "Terjadi kesalahan pada server.";
-    alert(`Login Gagal: ${errorMsg}`);
+      error.response?.data?.message ||
+      "Terjadi kesalahan pada server atau kredensial tidak cocok.";
+
+    // 🌟 4. Ubah Modal Loading menjadi Modal Peringatan Eror
+    Swal.fire({
+      icon: "error",
+      title: "Akses Ditolak",
+      text: errorMsg,
+      confirmButtonText: "Coba Lagi",
+      confirmButtonColor: "#10b981", // Emerald 500
+      customClass: {
+        popup: "rounded-2xl",
+        confirmButton: "rounded-xl font-bold text-sm px-6 py-2.5",
+      },
+    });
   } finally {
     loading.value = false;
   }
@@ -202,28 +233,24 @@ const goToRegister = () => {
 <style scoped>
 /* ── OVERRIDE PRIMEVUE & EFFECT INTERAKTIF ── */
 
-/* 1. Memaksa background input menjadi warna soft (putih keabu-abuan) agar tidak hitam lagi */
 :deep(.custom-input),
 :deep(.p-inputtext) {
-  background-color: #f9fafb !important; /* Warna abu-abu sangat soft (neutral-50) */
-  color: #1f2937 !important; /* Warna teks gelap yang lembut */
-  border: 1px solid #e5e7eb !important; /* Border abu-abu tipis */
+  background-color: #f9fafb !important;
+  color: #1f2937 !important;
+  border: 1px solid #e5e7eb !important;
 }
 
-/* Placeholder warna abu-abu terang agar estetik */
 :deep(.custom-input::placeholder) {
   color: #9ca3af !important;
 }
 
-/* 2. Efek Interaktif (Glow Effect) saat kolom input diklik (Focus) */
 :deep(.custom-input:focus),
 :deep(.p-inputtext:focus) {
-  background-color: #ffffff !important; /* Berubah jadi putih bersih */
-  border-color: #10b981 !important; /* Border berubah jadi hijau Emerald */
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important; /* Efek pendaran cahaya hijau transparan */
+  background-color: #ffffff !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
 }
 
-/* 3. Perbaikan posisi ikon mata pada PrimeVue Password */
 :deep(.custom-password-wrapper) {
   display: inline-flex;
   position: relative;

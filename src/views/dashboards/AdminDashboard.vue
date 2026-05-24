@@ -23,7 +23,9 @@
               A
             </div>
             <div>
-              <h2 class="text-sm font-bold tracking-tight underline decoration-sky-500 title_sidebar">
+              <h2
+                class="text-sm font-bold tracking-tight underline decoration-sky-500 title_sidebar"
+              >
                 Absensi Apps
               </h2>
               <p class="text-[10px] text-neutral-400 font-medium">
@@ -360,6 +362,7 @@
 <script setup>
 import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import Swal from "sweetalert2";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
@@ -489,50 +492,151 @@ const openModalEdit = (userData) => {
   modalForm.value = true;
 };
 
+// Di dalam file AdminDashboard.vue (Fungsi submitUser)
+
 const submitUser = async () => {
   btnLoading.value = true;
   try {
-    if (isEditMode.value) {
-      const response = await api.put(
-        `/admin/users/${selectedId.value}`,
-        formUser,
-      );
-      if (response.data.success) {
-        modalForm.value = false;
-        alert("Data berhasil diperbarui!");
-        fetchGridData(currentTab.value);
-      }
-    } else {
-      // 🔴 JALUR BARU: Jika yang ditambah adalah siswa, arahkan ke endpoint transaksi dua tabel
-      const endpoint =
-        formUser.role === "siswa" ? "/admin/siswa" : "/auth/register";
-      const response = await api.post(endpoint, formUser);
+    let response;
 
-      if (response.data.success) {
-        modalForm.value = false;
-        alert(`Berhasil menambahkan data ${formUser.role}!`);
-        fetchGridData(currentTab.value);
-        loadStats();
-      }
+    // Tampilkan loading spinner kecil selama proses penyimpanan
+    Swal.fire({
+      title: "Menyimpan Data...",
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    if (isEditMode.value) {
+      // Menggunakan selectedId.value dan backtick agar menembak ID dengan benar
+      response = await api.put(`/admin/users/${selectedId.value}`, formUser);
+    } else {
+      // Tambahkan role sesuai tab yang aktif saat membuat akun baru
+      formUser.role = currentTab.value === "guru" ? "guru" : "siswa";
+      response = await api.post("/admin/users", formUser);
     }
+
+    // 🌟 1. NOTIFIKASI SUKSES
+    Swal.fire({
+      icon: "success",
+      title: "Berhasil!",
+      text: `Data ${currentTab.value === "guru" ? "Guru" : "Siswa"} sukses disimpan.`,
+      timer: 1500,
+      showConfirmButton: false,
+      customClass: { popup: "rounded-2xl" },
+    });
+
+    modalForm.value = false;
+
+    // 🌟 PERBAIKAN: Gunakan fungsi bawaan milikmu untuk memuat ulang data tabel & statistik
+    fetchGridData(currentTab.value);
+    loadStats();
   } catch (error) {
-    alert(error.response?.data?.message || "Gagal menyimpan data.");
+    const status = error.response?.status;
+    const errorMsg =
+      error.response?.data?.message || "Gagal menghubungi server database.";
+
+    // 🌟 2. NOTIFIKASI EROR DUPLIKAT (Misal: NIP/Username sudah dipakai)
+    if (status === 400 || status === 409) {
+      Swal.fire({
+        icon: "warning",
+        title: "Data Duplikat!",
+        text: errorMsg,
+        confirmButtonColor: "#f59e0b", // Amber/Jingga
+        confirmButtonText: "Periksa Kembali",
+        customClass: {
+          popup: "rounded-2xl",
+          confirmButton: "rounded-xl font-bold text-sm px-6 py-2.5",
+        },
+      });
+    }
+    // 🌟 3. NOTIFIKASI EROR SERVER FATAL ATAU EROR LAINNYA
+    else {
+      Swal.fire({
+        icon: "error",
+        title: "Eror Server",
+        text: `Terjadi kendala sistem: ${errorMsg}`,
+        confirmButtonColor: "#10b981", // Kembali ke warna utama emerald
+        confirmButtonText: "Tutup",
+        customClass: {
+          popup: "rounded-2xl",
+          confirmButton: "rounded-xl font-bold text-sm px-6 py-2.5",
+        },
+      });
+    }
   } finally {
     btnLoading.value = false;
   }
 };
 
 const hapusUser = async (userId) => {
-  if (!confirm("Apakah kamu yakin ingin menghapus user ini secara permanen?"))
-    return;
   try {
+    // 1. Munculkan loading
+    Swal.fire({
+      title: "Menghapus Data...",
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    // 2. Eksekusi penghapusan ke database
     const response = await api.delete(`/admin/users/${userId}`);
+
     if (response.data.success) {
+      Swal.fire({
+        icon: "success",
+        title: "Terhapus!",
+        text: "Data user berhasil dihapus dari sistem secara permanen.",
+        timer: 1500,
+        showConfirmButton: false,
+        customClass: { popup: "rounded-2xl" },
+      });
+
       fetchGridData(currentTab.value);
       loadStats();
     }
   } catch (error) {
-    alert("Gagal menghapus.");
+    const status = error.response?.status;
+    let errorMsg =
+      error.response?.data?.message ||
+      "Terjadi kesalahan pada server saat menghapus.";
+
+    // 🌟 LOGIKA BARU: Tangkap eror relasi jadwal (Foreign Key)
+    // Jika backend mengirim status 500 atau pesan mengandung kata foreign key/jadwal
+    if (
+      status === 500 ||
+      errorMsg.includes("foreign key") ||
+      errorMsg.includes("jadwal")
+    ) {
+      errorMsg =
+        "Tidak dapat menghapus! Guru ini masih memiliki Jadwal Mengajar aktif. Silakan hapus jadwalnya terlebih dahulu di menu Jadwal Mengajar Guru.";
+
+      // Tampilkan SweetAlert dengan ikon Warning (Peringatan) bukan Eror silang merah
+      Swal.fire({
+        icon: "warning",
+        title: "Data Terkunci",
+        text: errorMsg,
+        confirmButtonColor: "#f59e0b", // Warna Amber/Jingga agar lebih ramah
+        confirmButtonText: "Mengerti",
+        customClass: {
+          popup: "rounded-2xl",
+          confirmButton: "rounded-xl font-bold text-sm px-6 py-2.5",
+        },
+      });
+    } else {
+      // Jika eror karena hal lain (misal koneksi putus)
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Menghapus",
+        text: errorMsg,
+        confirmButtonColor: "#10b981",
+        confirmButtonText: "Tutup",
+        customClass: {
+          popup: "rounded-2xl",
+          confirmButton: "rounded-xl font-bold text-sm px-6 py-2.5",
+        },
+      });
+    }
   }
 };
 
@@ -547,8 +651,46 @@ const switchTab = (tabName) => {
 };
 
 const handleLogout = () => {
-  localStorage.clear();
-  router.push("/login");
+  Swal.fire({
+    title: "Konfirmasi Keluar",
+    text: "Apakah kamu yakin ingin keluar dari sesi Admin?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#ef4444", // Warna merah muda/rose khas opsi destruktif
+    cancelButtonColor: "#64748b", // Warna slate/abu-abu netral
+    confirmButtonText: "Ya, Keluar Saja!",
+    cancelButtonText: "Batal",
+    reverseButtons: true, // Membalik posisi tombol agar tombol batal mudah dijangkau di HP
+    customClass: {
+      popup: "rounded-2xl",
+      confirmButton: "rounded-xl font-bold text-sm px-5 py-2.5 shadow-sm",
+      cancelButton: "rounded-xl font-bold text-sm px-5 py-2.5",
+    },
+  }).then((result) => {
+    // Jika tombol 'Ya, Keluar' ditekan
+    if (result.isConfirmed) {
+      // 1. Bersihkan semua data sesi di localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("email");
+      localStorage.removeItem("role");
+
+      // 2. Tampilkan notifikasi sukses kecil (opsional, bisa dibuang jika dirasa berlebihan)
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil Keluar",
+        text: "Sesi kamu telah berakhir dengan aman.",
+        timer: 1500,
+        showConfirmButton: false,
+        customClass: { popup: "rounded-2xl" },
+      });
+
+      // 3. Alihkan kembali ke halaman utama/login
+      router.push("/");
+    }
+  });
 };
 
 onMounted(() => {
@@ -619,5 +761,11 @@ onMounted(() => {
 :deep(.p-dialog-content .p-select:focus-within),
 :deep(.p-dialog-content .p-password input:focus) {
   border-color: #171717 !important;
+}
+</style>
+
+<style>
+body .swal2-container {
+  z-index: 999999 !important;
 }
 </style>
