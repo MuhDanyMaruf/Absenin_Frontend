@@ -360,7 +360,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, onBeforeMount } from "vue";
 import { useRouter } from "vue-router";
 import Swal from "sweetalert2";
 import Button from "primevue/button";
@@ -378,6 +378,35 @@ import ManageMasterKelas from "./components/ManageMasterKelas.vue";
 import ManageJadwalPelajaran from "./components/ManageJadwalPelajaran.vue";
 
 const router = useRouter();
+
+const checkAuth = () => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  // Jika tidak ada token (belum login), ATAU rolenya bukan admin
+  if (!token || role !== "admin") {
+    // Tampilkan notifikasi peringatan
+    Swal.fire({
+      icon: "error",
+      title: "Akses Ditolak!",
+      text: "Kamu tidak memiliki izin untuk masuk ke halaman ini. Silakan login terlebih dahulu.",
+      confirmButtonColor: "#10b981",
+      customClass: {
+        popup: "rounded-2xl",
+        confirmButton: "rounded-xl font-bold px-6 py-2.5",
+      },
+    });
+
+    // Tendang (Redirect) paksa ke halaman login (/)
+    router.push("/");
+  }
+};
+
+// Jalankan sistem keamanan SEBELUM halaman berhasil dimuat/digambar di layar
+onBeforeMount(() => {
+  checkAuth();
+});
+
 const currentTab = ref("overview");
 const tableLoading = ref(false);
 const btnLoading = ref(false);

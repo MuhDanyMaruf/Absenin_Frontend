@@ -125,9 +125,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, reactive } from "vue";
+import {
+  ref,
+  onMounted,
+  onBeforeUnmount,
+  computed,
+  reactive,
+  onBeforeMount,
+} from "vue";
 import { useRouter } from "vue-router";
 import api from "../../services/api";
+import Swal from "sweetalert2";
 
 // IMPORT TIGA FILE SUB-COMPONENTS BARU
 import OverviewSection from "./components/OverviewGuruSection.vue";
@@ -136,6 +144,35 @@ import NilaiSection from "./components/NilaiSection.vue";
 import RiwayatSection from "./components/RiwayatSection.vue";
 
 const router = useRouter();
+
+const checkAuth = () => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  // Jika tidak ada token (belum login), ATAU rolenya bukan guru
+  if (!token || role !== "guru") {
+    // Tampilkan notifikasi peringatan
+    Swal.fire({
+      icon: "error",
+      title: "Akses Ditolak!",
+      text: "Kamu tidak memiliki izin untuk masuk ke Portal Guru. Silakan login terlebih dahulu.",
+      confirmButtonColor: "#10b981",
+      customClass: {
+        popup: "rounded-2xl",
+        confirmButton: "rounded-xl font-bold px-6 py-2.5",
+      },
+    });
+
+    // Tendang (Redirect) paksa ke halaman utama/login
+    router.push("/");
+  }
+};
+
+// Jalankan sistem keamanan SEBELUM halaman berhasil dimuat di layar
+onBeforeMount(() => {
+  checkAuth();
+});
+
 const activeTab = ref("overview");
 
 const listJadwal = ref([]);
@@ -379,7 +416,7 @@ const loadGuruSession = () => {
 
 const handleLogout = () => {
   localStorage.clear();
-  router.push("/login");
+  router.push("/"); // 🌟 PERBAIKAN: Arahkan ke rute login awal (sesuaikan dengan rute login kamu, biasanya "/")
 };
 
 onMounted(async () => {
