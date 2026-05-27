@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-neutral-50 flex items-center justify-center p-4 antialiased font-sans"
+    class="min-h-screen w-full flex items-center justify-center bg-login relative"
   >
     <div
       class="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-neutral-200/60 shadow-sm space-y-6"
@@ -186,6 +186,13 @@ const goToLogin = () => {
 </script>
 
 <style scoped>
+.bg-login {
+  /* Ganti URL ini dengan path gambar aslimu (bisa simpan di folder assets) */
+  background-image: url("../assets/background_1.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 /* ── OVERRIDE STYLING & GLOW INTERACTIVE EFFECT ── */
 
 /* 1. Reset & Paksa input (PrimeVue InputText & Select) menjadi warna soft putih/abu-abu */
