@@ -2,8 +2,11 @@
   <div
     class="min-h-screen w-full flex items-center justify-center bg-login relative"
   >
+    <!-- OVERLAY KACA BURAM (Opsional, agar tulisan lebih terbaca jika pakai background gambar) -->
+    <div class="absolute inset-0 bg-white/80 backdrop-blur-[3px]"></div>
+
     <div
-      class="w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-neutral-200/60 shadow-sm space-y-6"
+      class="relative z-10 w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-neutral-200/60 shadow-sm space-y-6"
     >
       <div class="text-center space-y-2">
         <div class="mx-auto flex items-center justify-center">
@@ -61,28 +64,36 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
+          <!-- 🌟 PERBAIKAN: Komponen Kelas Dinamis -->
           <div class="flex flex-col gap-1.5">
             <label for="kelas" class="text-xs font-semibold text-neutral-600"
               >Kelas</label
             >
             <Select
               id="kelas"
-              v-model="registerForm.kelas"
+              v-model="registerForm.kelas_id"
               :options="listKelas"
+              optionLabel="nama_kelas"
+              optionValue="id"
+              :loading="isDataLoading"
               placeholder="Pilih Kelas"
               class="custom-register-select w-full h-11 border border-neutral-200 rounded-xl text-sm flex items-center outline-none transition-all duration-300"
               required
             />
           </div>
 
+          <!-- 🌟 PERBAIKAN: Komponen Jurusan Dinamis -->
           <div class="flex flex-col gap-1.5">
             <label for="jurusan" class="text-xs font-semibold text-neutral-600"
               >Jurusan</label
             >
             <Select
               id="jurusan"
-              v-model="registerForm.jurusan"
+              v-model="registerForm.jurusan_id"
               :options="listJurusan"
+              optionLabel="nama_jurusan"
+              optionValue="id"
+              :loading="isDataLoading"
               placeholder="Pilih Jurusan"
               class="custom-register-select w-full h-11 border border-neutral-200 rounded-xl text-sm flex items-center outline-none transition-all duration-300"
               required
@@ -130,41 +141,64 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue"; // 🌟 Import onMounted
 import InputText from "primevue/inputtext";
 import Password from "primevue/password";
 import Button from "primevue/button";
 import Select from "primevue/select";
 import { useRouter } from "vue-router";
-import api from "../services/api"; // <-- IMPORT SERVICE API
+import api from "../services/api";
 
 const router = useRouter();
 const loading = ref(false);
+const isDataLoading = ref(true); // Indikator loading untuk dropdown
+
+// 🌟 Penampung Data dari Database
+const listKelas = ref([]);
+const listJurusan = ref([]);
 
 const registerForm = reactive({
-  username: "", // Ini akan menampung data NIS saat di-POST ke backend
+  username: "",
   email: "",
   password: "",
   role: "siswa",
-  kelas: null,
-  jurusan: null,
+  kelas_id: null, // Menggunakan ID agar presisi masuk ke database relasional
+  jurusan_id: null,
 });
 
-const listKelas = ref([
-  "X IPA 1",
-  "X IPA 2",
-  "XI IPA 1",
-  "XI IPA 2",
-  "XII IPA 1",
-  "XII IPS 1",
-]);
-const listJurusan = ref(["IPA", "IPS", "Bahasa"]);
+// =====================================================================
+// 🌟 FUNGSI TARIK DATA MASTER KELAS & JURUSAN DARI DATABASE
+// =====================================================================
+const loadMasterData = async () => {
+  isDataLoading.value = true;
+  try {
+    // 🌟 PERBAIKAN: Tambahkan awalan /admin/ agar rutenya cocok dengan backend
+    const resKelas = await api.get("/admin/kelas");
+    if (resKelas.data.success) {
+      listKelas.value = resKelas.data.data;
+    }
+
+    const resJurusan = await api.get("/admin/jurusan");
+    if (resJurusan.data.success) {
+      listJurusan.value = resJurusan.data.data;
+    }
+  } catch (error) {
+    console.error("Gagal menarik referensi kelas/jurusan:", error);
+  } finally {
+    isDataLoading.value = false;
+  }
+};
+
+// Jalankan fungsi saat halaman baru dimuat
+onMounted(() => {
+  loadMasterData();
+});
+// =====================================================================
 
 const handleRegister = async () => {
   loading.value = true;
 
   try {
-    // Hit endpoint register backend Express.js (Misal: /auth/register)
     const response = await api.post("/auth/register", registerForm);
 
     if (response.data.success) {
