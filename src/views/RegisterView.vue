@@ -3,7 +3,7 @@
     class="min-h-screen w-full flex items-center justify-center bg-login relative"
   >
     <!-- OVERLAY KACA BURAM (Opsional, agar tulisan lebih terbaca jika pakai background gambar) -->
-    <div class="absolute inset-0 bg-white/80 backdrop-blur-[3px]"></div>
+    <!-- <div class="absolute inset-0 bg-white/80 backdrop-blur-[3px]"></div> -->
 
     <div
       class="relative z-10 w-full max-w-md bg-white p-6 md:p-8 rounded-2xl border border-neutral-200/60 shadow-sm space-y-6"
